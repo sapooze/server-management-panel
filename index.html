@@ -1,0 +1,1613 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Server Management Panel</title>
+  <link rel="icon" type="image/x-icon" href="favicon.png">
+
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #fff;
+      --text: #111827;
+      --muted: #6b7280;
+      --header: #e57373;
+      --border: rgba(0, 0, 0, .08);
+      --shadow: 0 4px 10px rgba(0, 0, 0, .08);
+      --shadowHover: 0 8px 18px rgba(0, 0, 0, .12);
+      --btnBg: #fff;
+      --btnText: #111827;
+      --btnBorder: rgba(0, 0, 0, .10);
+      --focus: rgba(229, 115, 115, .35);
+      --inputBg: #fff;
+      --dangerBg: #fff;
+      --dangerText: #b91c1c;
+      --dangerBorder: rgba(185, 28, 28, .25);
+    }
+
+    body.dark {
+      --bg: #0b1220;
+      --card: #0f1a2b;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --header: #c85b5b;
+      --border: rgba(255, 255, 255, .10);
+      --shadow: 0 10px 24px rgba(0, 0, 0, .40);
+      --shadowHover: 0 14px 30px rgba(0, 0, 0, .55);
+      --btnBg: #111f33;
+      --btnText: #cbd5e1;
+      --btnBorder: rgba(255, 255, 255, .14);
+      --focus: rgba(200, 91, 91, .35);
+      --inputBg: #0c1728;
+      --dangerBg: #1a0f16;
+      --dangerText: #ffb4b4;
+      --dangerBorder: rgba(255, 180, 180, .22);
+    }
+
+    * { box-sizing: border-box }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text)
+    }
+
+    header {
+      background: var(--header);
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 14px 16px
+    }
+
+    .header-inner {
+      max-width: 920px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: .4px
+    }
+
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end
+    }
+
+    .topbtn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .18);
+      border: 1px solid rgba(255, 255, 255, .25);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .topbtn:disabled { opacity: .65; cursor: not-allowed }
+
+    .theme-toggle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, .30);
+      background: rgba(255, 255, 255, .18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      transition: transform .2s ease, background .2s ease;
+      user-select: none;
+    }
+
+    .theme-toggle:hover { transform: rotate(15deg) scale(1.05); }
+
+    body.dark .theme-toggle {
+      background: rgba(0, 0, 0, .18);
+      border: 1px solid rgba(255, 255, 255, .22);
+    }
+
+    main {
+      max-width: 920px;
+      margin: 20px auto 40px;
+      padding: 0 16px
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .card h2 { margin: 0; padding: 14px 16px; font-size: 16px }
+    .card .body { padding: 0 16px 16px }
+
+    label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 6px }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--inputBg);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 0 3px var(--focus);
+      border-color: transparent
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap }
+    .row>* { flex: 1 1 180px }
+
+    .btn {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      color: var(--btnText);
+      cursor: pointer;
+      font-weight: 650;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      transition: transform .18s ease, box-shadow .18s ease;
+      text-align: center;
+      display: inline-block;
+      user-select: none;
+    }
+
+    .btn:hover { transform: translateY(-2px); box-shadow: var(--shadowHover) }
+    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none }
+
+    .btn-danger {
+      background: var(--dangerBg);
+      color: var(--dangerText);
+      border: 1px solid var(--dangerBorder);
+    }
+
+    .status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .ok { border-left: 4px solid #2ecc71 }
+    .err { border-left: 4px solid #e74c3c }
+
+    details.section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    details.section summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 650;
+      user-select: none;
+      outline: none;
+    }
+
+    details.section summary::-webkit-details-marker { display: none }
+    details.section summary:focus { box-shadow: 0 0 0 3px var(--focus) inset }
+
+    .section-title { display: flex; flex-direction: column; gap: 2px; text-align: left }
+    .section-title small { font-weight: 500; color: var(--muted) }
+
+    .chev {
+      width: 10px; height: 10px;
+      border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted);
+      transform: rotate(45deg);
+      transition: transform .15s ease;
+      flex: 0 0 auto
+    }
+    details[open] .chev { transform: rotate(225deg) }
+
+    .content { padding: 0 16px 16px }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      padding-top: 4px
+    }
+
+    .cmd-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      width: min(650px, 100%);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cmd { width: 320px; }
+    .del { width: 120px; }
+
+    .info-dot {
+      width: 30px;
+      height: 42px;
+      border-radius: 12px;
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      color: var(--btnText);
+      font-weight: 800;
+      cursor: help;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      user-select: none;
+    }
+
+    .server-label-editable {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .server-label-editable:hover { text-decoration: underline; }
+
+    .edit-badge {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .muted { color: var(--muted) }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 999;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(860px, 100%);
+      max-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadowHover);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--card);
+      z-index: 2;
+    }
+
+    .modal-title {
+      font-weight: 800;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-body {
+      padding: 12px 14px;
+      overflow: auto;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--inputBg);
+      color: var(--text);
+      max-height: 55vh;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      justify-content: flex-end;
+    }
+
+    .history {
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .history-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+      background: var(--card);
+    }
+
+    .history-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--muted);
+      gap: 8px;
+    }
+
+    /* Panel layout */
+    .panel-layout { display: flex; align-items: flex-start; gap: 14px; }
+    .panel-left { flex: 1 1 auto; min-width: 0; }
+    .panel-right { flex: 0 0 320px; width: 320px; position: sticky; top: 16px; }
+
+    @media (max-width: 980px) {
+      .panel-layout { flex-direction: column; }
+      .panel-right { position: static; width: 100%; }
+    }
+
+    /* Speedtest */
+    .speedtest-box { padding: 14px 16px 16px; }
+    .speedtest-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .speedtest-title { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 14px; }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+    .dot.gray { background: rgba(128, 128, 128, .45); }
+    .dot.red { background: rgba(231, 76, 60, .9); }
+    .dot.yellow { background: rgba(241, 196, 15, .95); }
+    .dot.green { background: rgba(46, 204, 113, .9); }
+
+    .speedtest-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+    .speedtest-grid b { color: var(--muted); font-weight: 800; font-size: 12px; }
+    .speedtest-grid .val { font-weight: 700; }
+
+    .speedtest-err {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--dangerBorder);
+      background: var(--dangerBg);
+      color: var(--dangerText);
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .speedtest-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      color: var(--btnText);
+      cursor: pointer;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      transition: transform .18s ease, box-shadow .18s ease;
+      user-select: none;
+    }
+    .icon-btn:hover { transform: translateY(-2px); box-shadow: var(--shadowHover); }
+    .icon-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .diag-bottom { margin-top: 6px; padding-top: 6px; }
+    .spacer-line {
+      width: min(650px, 100%);
+      height: 1px;
+      background: var(--border);
+      margin: 6px auto 0;
+      border-radius: 999px;
+    }
+
+    /* Admin-only inline controls */
+    .admin-controls {
+      margin: 10px auto 0;
+      width: min(650px, 100%);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .admin-controls .left,
+    .admin-controls .right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .mini {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--btnBorder);
+      background: var(--btnBg);
+      color: var(--btnText);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      user-select: none;
+    }
+    .toggle input { width: 18px; height: 18px; }
+
+    /* Spinner */
+    .btn .btn-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+    }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      opacity: .85;
+      display: inline-block;
+      animation: spin .8s linear infinite;
+      flex: 0 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Server management card */
+    .server-mgmt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 720px) { .server-mgmt-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="title">Server Management Panel</div>
+
+      <div class="right-controls">
+        <a id="loginBtn" class="topbtn" href="auth.html" style="display:none;">Login</a>
+        <button id="logoutBtn" class="topbtn" type="button" style="display:none;">Logout</button>
+
+        <button id="themeToggle" class="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="panel-layout">
+      <div class="panel-left">
+
+        <!-- ADMIN: SERVER MANAGEMENT -->
+        <div class="card" id="serverMgmtCard" style="display:none;">
+          <h2>Server Management</h2>
+          <div class="body">
+            <div class="server-mgmt-grid">
+              <div>
+                <label for="smServerKey">Server ID (server_key)</label>
+                <input id="smServerKey" placeholder="e.g. proxmox" />
+              </div>
+              <div>
+                <label for="smServerLabel">Server Name (label)</label>
+                <input id="smServerLabel" placeholder="e.g. Proxmox Host" />
+              </div>
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="smCreateServerBtn" class="btn" type="button">Add Server</button>
+              <button id="smDeleteServerBtn" class="btn btn-danger" type="button">Delete Server</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px; font-size:13px;">
+              Tip: To edit a server ID, use the “Edit ID” action on the server header below (admin-only).
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN: CREATE COMMAND -->
+        <div class="card" id="creatorCard" style="display:none;">
+          <h2>Create Command</h2>
+          <div class="body">
+            <div class="row">
+              <div>
+                <label for="serverSelect">Server</label>
+                <select id="serverSelect"></select>
+              </div>
+              <div>
+                <label for="sortOrder">Sort order</label>
+                <input id="sortOrder" type="number" value="10" />
+              </div>
+            </div>
+
+            <label for="labelInput">Button label</label>
+            <input id="labelInput" placeholder="e.g. Get Hostname" />
+
+            <label for="commandInput">Command value (sent to webhook)</label>
+            <input id="commandInput" placeholder="e.g. hostname" />
+
+            <label for="confirmInput">Optional confirm text</label>
+            <input id="confirmInput" placeholder='e.g. "Are you sure?" (leave empty for none)' />
+
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="createBtn" class="btn" type="button">Save Command</button>
+              <button id="reloadBtn" class="btn" type="button">Reload</button>
+            </div>
+
+            <div class="muted" style="margin-top:10px; font-size:13px;">
+              Tip: Add confirm text for destructive actions (like reboot).
+            </div>
+          </div>
+        </div>
+
+        <div id="groups"></div>
+
+        <!-- Status bar: admin-only -->
+        <div id="status" class="status" aria-live="polite">Ready.</div>
+      </div>
+
+      <!-- Sticky Speedtest box on the right -->
+      <div class="panel-right">
+        <div class="card">
+          <h2>Speedtest</h2>
+          <div id="speedtestBox" class="speedtest-box"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Diagnostic Result Modal -->
+  <div id="diagModalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <div class="modal-header">
+        <div id="diagModalTitle" class="modal-title">Diagnostic</div>
+        <button id="diagCloseBtn" class="btn" type="button" style="padding:8px 10px;">Close</button>
+      </div>
+      <div class="modal-body">
+        <pre id="diagModalPre">(no data)</pre>
+        <div class="modal-actions">
+          <button id="diagCopyBtn" class="btn" type="button" style="padding:10px 12px;">Copy</button>
+        </div>
+
+        <div class="history">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+            <div class="modal-title">Last 5 Diagnostics</div>
+            <button id="diagRefreshHistoryBtn" class="btn" type="button" style="padding:10px 12px;">Refresh</button>
+          </div>
+          <div id="diagHistoryList" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Webhook URL is loaded from backend (.env) via api.php?op=config
+    let WEBHOOK_URL = "";
+
+    // Hardcoded speedtest: runs on proxmox
+    const SPEEDTEST_SERVER_TO_SEND = "proxmox";
+    const SPEEDTEST_COMMAND = "speedtest";
+
+    const statusEl = document.getElementById("status");
+
+    const serverSelect = document.getElementById("serverSelect");
+    const labelInput = document.getElementById("labelInput");
+    const commandInput = document.getElementById("commandInput");
+    const confirmInput = document.getElementById("confirmInput");
+    const sortOrderInput = document.getElementById("sortOrder");
+
+    const createBtn = document.getElementById("createBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
+    const groupsEl = document.getElementById("groups");
+
+    const creatorCard = document.getElementById("creatorCard");
+    const serverMgmtCard = document.getElementById("serverMgmtCard");
+
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // Server management inputs/buttons
+    const smServerKey = document.getElementById("smServerKey");
+    const smServerLabel = document.getElementById("smServerLabel");
+    const smCreateServerBtn = document.getElementById("smCreateServerBtn");
+    const smDeleteServerBtn = document.getElementById("smDeleteServerBtn");
+
+    // Speedtest box
+    const speedtestBox = document.getElementById("speedtestBox");
+    let speedtestRunning = false;
+    let speedtestPollTimer = null;
+    let speedtestBaselineUpdatedAt = null;
+
+    // Modal
+    const diagModalBackdrop = document.getElementById("diagModalBackdrop");
+    const diagModalTitle = document.getElementById("diagModalTitle");
+    const diagModalPre = document.getElementById("diagModalPre");
+    const diagCloseBtn = document.getElementById("diagCloseBtn");
+    const diagCopyBtn = document.getElementById("diagCopyBtn");
+    const diagHistoryList = document.getElementById("diagHistoryList");
+    const diagRefreshHistoryBtn = document.getElementById("diagRefreshHistoryBtn");
+
+    let diagModalServerKey = null;
+    let isAdmin = false;
+
+    // Keep per-server diagnostic running state so spinner stays until finished
+    const diagRunningByServer = new Map(); // serverKey => { id, timer }
+
+    function normalizeSeverity(sev) {
+      const s = String(sev || "").toLowerCase().trim();
+      if (s === "green" || s === "yellow" || s === "red") return s;
+      return "gray";
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[m]));
+    }
+
+    function setStatus(msg, kind) {
+      if (!isAdmin) return;
+      statusEl.classList.remove("ok", "err");
+      if (kind) statusEl.classList.add(kind);
+      statusEl.textContent = msg;
+    }
+
+    // Theme toggle (dark default)
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    function applyTheme(isDark) {
+      document.body.classList.toggle("dark", isDark);
+      themeIcon.textContent = isDark ? "☀️" : "🌙";
+      localStorage.setItem("darkMode", isDark ? "1" : "0");
+    }
+
+    const savedTheme = localStorage.getItem("darkMode");
+    if (savedTheme === null) applyTheme(true);
+    else applyTheme(savedTheme === "1");
+
+    themeToggle.addEventListener("click", () => {
+      const isDarkTheme = !document.body.classList.contains("dark");
+      applyTheme(isDarkTheme);
+    });
+
+    // API helpers
+    async function apiGet(op, qs = "") {
+      const url = `api.php?op=${encodeURIComponent(op)}${qs ? "&" + qs : ""}`;
+      const res = await fetch(url, { method: "GET", credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `GET ${op} failed`);
+      return data;
+    }
+
+    async function apiPost(op, payload) {
+      const res = await fetch(`api.php?op=${encodeURIComponent(op)}`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        const err = new Error(data.error || `POST ${op} failed`);
+        err.data = data;
+        err.status = res.status;
+        throw err;
+      }
+      return data;
+    }
+
+    async function apiDelete(op, queryString) {
+      const res = await fetch(`api.php?op=${encodeURIComponent(op)}&${queryString}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `DELETE ${op} failed`);
+      return data;
+    }
+
+    async function getAuthStatus() {
+      const res = await fetch("api.php?op=auth_status", { method: "GET", credentials: "same-origin" });
+      const data = await res.json().catch(() => ({}));
+      return !!(data && data.ok && data.authed);
+    }
+
+    async function logout() { await apiPost("logout", {}); }
+
+    async function loadConfig() {
+      const cfg = await apiGet("config");
+      WEBHOOK_URL = String(cfg.webhook_url || "").trim();
+      if (!WEBHOOK_URL) throw new Error("WEBHOOK_URL is empty. Set it in .env");
+    }
+
+    async function sendToWebhook(server, command, confirmText, btn, extraForm = null) {
+      if (confirmText && confirmText.trim()) {
+        if (!confirm(confirmText)) return;
+      }
+      const fd = new FormData();
+      fd.append("server", server);
+      fd.append("command", command);
+      if (extraForm) {
+        for (const [k, v] of Object.entries(extraForm)) fd.append(k, String(v));
+      }
+
+      if (btn) btn.disabled = true;
+      setStatus(`Sending: server="${server}", command="${command}" ...`);
+
+      try {
+        const res = await fetch(WEBHOOK_URL, { method: "POST", body: fd, credentials: "same-origin" });
+        const text = await res.text().catch(() => "");
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}${text ? " — " + text : ""}`);
+        const resp = text ? ` | Response: ${text}` : "";
+        setStatus(`✅ Sent: server="${server}", command="${command}"${resp}`, "ok");
+      } catch (e) {
+        setStatus(`❌ Failed: ${e.message}`, "err");
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function formatNumber(n) {
+      if (n === null || n === undefined) return "-";
+      const x = Number(n);
+      if (!Number.isFinite(x)) return String(n);
+      if (Math.abs(x) >= 100) return String(Math.round(x));
+      return String(Math.round(x * 10) / 10);
+    }
+
+    function setDiagButtonLoading(btn, loading, labelText) {
+      if (!btn) return;
+      const text = labelText || "Run Diagnostic";
+      if (loading) {
+        btn.disabled = true;
+        btn.innerHTML =
+          `<span class="btn-inner">
+             <span>${escapeHtml(text)}</span>
+             <span class="spinner" aria-hidden="true"></span>
+           </span>`;
+      } else {
+        btn.disabled = false;
+        btn.textContent = text;
+      }
+    }
+
+    function setSpeedtestButtonLoading(btn, loading) {
+      if (!btn) return;
+      const text = "Run Speedtest";
+      if (loading) {
+        btn.disabled = true;
+        btn.innerHTML =
+          `<span class="btn-inner">
+             <span>${escapeHtml(text)}</span>
+             <span class="spinner" aria-hidden="true"></span>
+           </span>`;
+      } else {
+        btn.disabled = false;
+        btn.textContent = text;
+      }
+    }
+
+    async function renameServerLabel(serverKey, currentLabel) {
+      const next = prompt(`Rename server "${currentLabel}" (ID stays "${serverKey}")`, currentLabel);
+      if (next === null) return;
+      const label = next.trim();
+      if (!label) { setStatus("❌ Server name cannot be empty.", "err"); return; }
+      try {
+        setStatus("Saving server name...");
+        await apiPost("servers_label", { server_key: serverKey, label });
+        await loadAll();
+        setStatus("✅ Server name updated.", "ok");
+      } catch (e) {
+        setStatus(`❌ Rename failed: ${e.message}`, "err");
+      }
+    }
+
+    async function renameServerKey(serverKey) {
+      const next = prompt(`Edit server ID (current: "${serverKey}")\n\nEnter new server ID:`, serverKey);
+      if (next === null) return;
+      const newKey = next.trim();
+      if (!newKey) { setStatus("❌ Server ID cannot be empty.", "err"); return; }
+      if (newKey === serverKey) return;
+
+      if (!confirm(`Change server ID from "${serverKey}" to "${newKey}"?\n\nThis will move all commands to the new ID.`)) return;
+
+      try {
+        setStatus("Saving server ID...");
+        await apiPost("servers_update_key", { old_key: serverKey, new_key: newKey });
+        await loadAll();
+        setStatus("✅ Server ID updated.", "ok");
+      } catch (e) {
+        setStatus(`❌ Server ID update failed: ${e.message}`, "err");
+      }
+    }
+
+    // ---- Diagnostics ----
+    function stopDiagPolling(serverKey) {
+      const st = diagRunningByServer.get(serverKey);
+      if (st && st.timer) clearInterval(st.timer);
+      if (st) st.timer = null;
+    }
+
+    function markDiagRunning(serverKey, id, btn, labelText) {
+      diagRunningByServer.set(serverKey, { id, timer: null });
+      setDiagButtonLoading(btn, true, labelText);
+    }
+
+    function clearDiagRunning(serverKey, btn, labelText) {
+      stopDiagPolling(serverKey);
+      diagRunningByServer.delete(serverKey);
+      setDiagButtonLoading(btn, false, labelText);
+    }
+
+    function openDiagModal(serverKey, title, content, severity) {
+      diagModalServerKey = serverKey;
+      const sev = normalizeSeverity(severity);
+      diagModalTitle.innerHTML = `<span class="dot ${escapeHtml(sev)}"></span><span>${escapeHtml(title)}</span>`;
+      diagModalPre.textContent = content || "(no output)";
+      diagModalBackdrop.classList.add("show");
+      diagModalBackdrop.setAttribute("aria-hidden", "false");
+      refreshDiagHistory(serverKey).catch(() => { });
+    }
+
+    function closeDiagModal() {
+      diagModalBackdrop.classList.remove("show");
+      diagModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    diagCloseBtn.addEventListener("click", closeDiagModal);
+    diagModalBackdrop.addEventListener("click", (e) => {
+      if (e.target === diagModalBackdrop) closeDiagModal();
+    });
+
+    diagCopyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(diagModalPre.textContent || "");
+        setStatus("✅ Copied diagnostic output.", "ok");
+      } catch (e) {
+        setStatus("❌ Copy failed (browser denied clipboard).", "err");
+      }
+    });
+
+    diagRefreshHistoryBtn.addEventListener("click", () => {
+      if (diagModalServerKey) refreshDiagHistory(diagModalServerKey).catch(() => { });
+    });
+
+    async function refreshDiagHistory(serverKey) {
+      const data = await apiGet("diagnostic_history", `server_key=${encodeURIComponent(serverKey)}`);
+      const list = data.history || [];
+      diagHistoryList.innerHTML = "";
+      if (!list.length) {
+        diagHistoryList.innerHTML = `<div class="muted">No history yet.</div>`;
+        return;
+      }
+
+      for (const item of list) {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        const created = item.created_at || "";
+        const finished = item.finished_at || "";
+        const sev = normalizeSeverity(item.severity);
+
+        div.innerHTML = `
+          <div class="history-meta">
+            <span class="pill">ID: ${escapeHtml(item.id)}</span>
+            <span class="pill"><span class="dot ${escapeHtml(sev)}"></span> ${escapeHtml(item.status)}</span>
+            <span class="pill">Created: ${escapeHtml(created)}</span>
+            ${finished ? `<span class="pill">Finished: ${escapeHtml(finished)}</span>` : ``}
+          </div>
+          <div class="muted" style="font-size:12px; white-space:pre-wrap;">${escapeHtml(item.result_preview || "")}</div>
+          <div style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+            <button class="btn" type="button" style="padding:10px 12px;" data-view-id="${escapeHtml(item.id)}">View</button>
+          </div>
+        `;
+        div.querySelector('[data-view-id]').addEventListener("click", async () => {
+          try {
+            const s = await apiGet("diagnostic_status", `id=${encodeURIComponent(item.id)}`);
+            const d = s.diagnostic;
+            openDiagModal(
+              serverKey,
+              `Diagnostic #${d.id} (${serverKey}) — ${d.status}`,
+              d.result_text || "(no output)",
+              d.severity
+            );
+          } catch (e) {
+            setStatus(`❌ Failed: ${e.message}`, "err");
+          }
+        });
+        diagHistoryList.appendChild(div);
+      }
+    }
+
+    async function startDiagnostic(serverKey, serverLabel, btn) {
+      if (diagRunningByServer.has(serverKey)) return;
+
+      const labelText = "Run Diagnostic";
+      setDiagButtonLoading(btn, true, labelText);
+
+      try {
+        setStatus(`Starting diagnostic on "${serverLabel}"...`);
+        const start = await apiPost("diagnostic_start", { server_key: serverKey });
+        const id = start.diagnostic_id;
+
+        markDiagRunning(serverKey, id, btn, labelText);
+
+        await sendToWebhook(serverKey, "diagnostic", "", null, { request_id: id });
+        setStatus(`🔄 Diagnostic running on "${serverLabel}" (server=${serverKey})\nRequest ID: ${id}`, "ok");
+
+        stopDiagPolling(serverKey);
+        const state = diagRunningByServer.get(serverKey);
+        state.timer = setInterval(async () => {
+          try {
+            const st = await apiGet("diagnostic_status", `id=${encodeURIComponent(id)}`);
+            const d = st.diagnostic;
+
+            if (d.status === "running" || d.status === "pending") return;
+
+            stopDiagPolling(serverKey);
+            openDiagModal(
+              serverKey,
+              `Diagnostic #${d.id} (${serverKey}) — ${d.status}`,
+              d.result_text || "(no output)",
+              d.severity
+            );
+
+            setStatus(`✅ Diagnostic finished on "${serverLabel}" (server=${serverKey})\nStatus: ${d.status}\nRequest ID: ${id}`, "ok");
+            clearDiagRunning(serverKey, btn, labelText);
+            await loadAll();
+          } catch (e) {
+            setStatus(`⚠️ Diagnostic polling error: ${e.message}`, "err");
+            clearDiagRunning(serverKey, btn, labelText);
+          }
+        }, 2000);
+
+      } catch (e) {
+        if (e && e.status === 409 && e.data && e.data.running) {
+          const r = e.data.running;
+          setStatus(`❌ A diagnostic is already running.\nRunning on server: ${r.server_key}\nRequest ID: ${r.id}\nPlease wait until it finishes.`, "err");
+        } else {
+          setStatus(`❌ Diagnostic start failed: ${(e && e.message) ? e.message : String(e)}`, "err");
+        }
+        clearDiagRunning(serverKey, btn, labelText);
+      }
+    }
+
+    // ---- Speedtest ----
+    function stopSpeedtestPolling() {
+      if (speedtestPollTimer) clearInterval(speedtestPollTimer);
+      speedtestPollTimer = null;
+    }
+
+    function isSpeedtestResultComplete(st) {
+      if (!st) return false;
+      if (st.error && String(st.error).trim()) return true;
+      const down = Number(st.down), up = Number(st.up), ping = Number(st.ping);
+      return [down, up, ping].every(Number.isFinite) && (String(st.updated_at || "").trim().length > 0);
+    }
+
+    function classifySpeedtest(st) {
+      if (!st) return { cls: "gray", reason: "No data available yet." };
+      if (st.error && String(st.error).trim()) return { cls: "red", reason: String(st.error) };
+
+      const down = Number(st.down);
+      const up = Number(st.up);
+      const ping = Number(st.ping);
+
+      if (![down, up, ping].every(Number.isFinite)) return { cls: "gray", reason: "No data available yet." };
+
+      if (down < 300 || up < 100 || ping > 50) return { cls: "red", reason: "Threshold: red" };
+      if (down < 600 || up < 300 || ping > 25) return { cls: "yellow", reason: "Threshold: yellow" };
+      if (down > 600 && up > 300 && ping < 25) return { cls: "green", reason: "Threshold: green" };
+      return { cls: "yellow", reason: "Threshold: yellow" };
+    }
+
+    function renderSpeedtestBox(st) {
+      const cls = classifySpeedtest(st);
+      const updatedAt = st && st.updated_at ? String(st.updated_at) : "";
+
+      const downVal = (st && !st.error) ? `${formatNumber(st.down)} Mbit/s` : "-";
+      const upVal = (st && !st.error) ? `${formatNumber(st.up)} Mbit/s` : "-";
+      const pingVal = (st && !st.error) ? `${formatNumber(st.ping)} ms` : "-";
+
+      const errText = (st && st.error) ? String(st.error) : "";
+
+      speedtestBox.innerHTML = `
+        <div class="speedtest-top">
+          <div class="speedtest-title">
+            <span>Speedtest</span>
+            <span class="dot ${escapeHtml(cls.cls)}" title="${escapeHtml(cls.reason || "")}"></span>
+          </div>
+        </div>
+
+        <div class="speedtest-grid">
+          <b>Download Speed:</b><span class="val">${escapeHtml(downVal)}</span>
+          <b>Upload Speed:</b><span class="val">${escapeHtml(upVal)}</span>
+          <b>Ping:</b><span class="val">${escapeHtml(pingVal)}</span>
+          <b>Updated:</b><span class="val">${escapeHtml(updatedAt || "-")}</span>
+        </div>
+
+        ${errText ? `<div class="speedtest-err">${escapeHtml(`Error: ${errText}`)}</div>` : ``}
+
+        <div class="speedtest-actions">
+          <button id="runSpeedtestBtn" class="btn cmd" type="button"></button>
+          <button id="reloadSpeedtestBtn" class="icon-btn" type="button" title="Reload">⟳</button>
+        </div>
+      `;
+
+      const runBtn = document.getElementById("runSpeedtestBtn");
+      const reloadBtn = document.getElementById("reloadSpeedtestBtn");
+
+      if (speedtestRunning) setSpeedtestButtonLoading(runBtn, true);
+      else setSpeedtestButtonLoading(runBtn, false);
+
+      reloadBtn.disabled = !!speedtestRunning;
+
+      runBtn.addEventListener("click", async () => {
+        if (speedtestRunning) return;
+        await runSpeedtest();
+      });
+
+      reloadBtn.addEventListener("click", async () => {
+        reloadBtn.disabled = true;
+        try { await loadSpeedtest(); }
+        finally { reloadBtn.disabled = false; }
+      });
+    }
+
+    async function runSpeedtest() {
+      if (speedtestRunning) return;
+
+      speedtestRunning = true;
+      stopSpeedtestPolling();
+      speedtestBaselineUpdatedAt = null;
+
+      try {
+        const before = await apiGet("speedtest_status");
+        const prev = before.result || null;
+        speedtestBaselineUpdatedAt = prev && prev.updated_at ? String(prev.updated_at) : null;
+        renderSpeedtestBox(prev);
+      } catch (_) {
+        renderSpeedtestBox(null);
+      }
+
+      setStatus("🔄 Speedtest running...", "ok");
+
+      try {
+        await sendToWebhook(SPEEDTEST_SERVER_TO_SEND, SPEEDTEST_COMMAND, "", null);
+        setStatus("✅ Speedtest triggered. Waiting for result...", "ok");
+      } catch (e) {
+        speedtestRunning = false;
+        stopSpeedtestPolling();
+        setStatus(`❌ Failed: ${e.message}`, "err");
+        await loadSpeedtest().catch(() => { });
+        return;
+      }
+
+      const startedAt = Date.now();
+      speedtestPollTimer = setInterval(async () => {
+        try {
+          const d = await apiGet("speedtest_status");
+          const st = d.result || null;
+
+          renderSpeedtestBox(st);
+
+          if (st && st.error && String(st.error).trim()) {
+            stopSpeedtestPolling();
+            speedtestRunning = false;
+            renderSpeedtestBox(st);
+            return;
+          }
+
+          const curUpdatedAt = st && st.updated_at ? String(st.updated_at) : null;
+          if (speedtestBaselineUpdatedAt && curUpdatedAt && curUpdatedAt !== speedtestBaselineUpdatedAt) {
+            stopSpeedtestPolling();
+            speedtestRunning = false;
+            renderSpeedtestBox(st);
+            return;
+          }
+          if (!speedtestBaselineUpdatedAt && isSpeedtestResultComplete(st)) {
+            stopSpeedtestPolling();
+            speedtestRunning = false;
+            renderSpeedtestBox(st);
+            return;
+          }
+
+          if (Date.now() - startedAt > 120000) {
+            stopSpeedtestPolling();
+            speedtestRunning = false;
+            renderSpeedtestBox(st);
+          }
+        } catch (_) {
+          if (Date.now() - startedAt > 120000) {
+            stopSpeedtestPolling();
+            speedtestRunning = false;
+            await loadSpeedtest().catch(() => { });
+          }
+        }
+      }, 2000);
+    }
+
+    async function loadSpeedtest() {
+      try {
+        const d = await apiGet("speedtest_status");
+        renderSpeedtestBox(d.result || null);
+      } catch (e) {
+        renderSpeedtestBox({ error: e.message });
+      }
+    }
+
+    // ---- Admin settings ----
+    async function saveServerSettings(serverKey, publicVisible, sortOrder) {
+      setStatus("Saving…", "ok");
+      await apiPost("server_settings", {
+        server_key: serverKey,
+        public_visible: !!publicVisible,
+        sort_order: parseInt(String(sortOrder || "0"), 10) || 0
+      });
+      setStatus("✅ Saved.", "ok");
+    }
+
+    async function saveCommandSettings(id, publicVisible) {
+      setStatus("Saving…", "ok");
+      await apiPost("command_settings", {
+        id: Number(id),
+        public_visible: !!publicVisible
+      });
+      setStatus("✅ Saved.", "ok");
+    }
+
+    // ---- Server Management actions ----
+    smCreateServerBtn.addEventListener("click", async () => {
+      const key = (smServerKey.value || "").trim();
+      const label = (smServerLabel.value || "").trim();
+      if (!key || !label) {
+        alert("Please enter both Server ID and Server Name.");
+        return;
+      }
+      smCreateServerBtn.disabled = true;
+      try {
+        setStatus("Saving…", "ok");
+        await apiPost("servers_create", { server_key: key, label });
+        smServerKey.value = "";
+        smServerLabel.value = "";
+        await loadAll();
+        setStatus("✅ Server added.", "ok");
+      } catch (e) {
+        setStatus(`❌ Save failed: ${e.message}`, "err");
+      } finally {
+        smCreateServerBtn.disabled = false;
+      }
+    });
+
+    smDeleteServerBtn.addEventListener("click", async () => {
+      const key = (smServerKey.value || "").trim();
+      if (!key) {
+        alert("Enter Server ID to delete.");
+        return;
+      }
+      if (!confirm(`Delete server "${key}"?\n\nThis will also delete its commands.`)) return;
+
+      smDeleteServerBtn.disabled = true;
+      try {
+        setStatus("Deleting...", "ok");
+        await apiPost("servers_delete", { server_key: key });
+        smServerKey.value = "";
+        smServerLabel.value = "";
+        await loadAll();
+        setStatus("✅ Deleted.", "ok");
+      } catch (e) {
+        setStatus(`❌ Delete failed: ${e.message}`, "err");
+      } finally {
+        smDeleteServerBtn.disabled = false;
+      }
+    });
+
+    function renderGroups(servers, commands, authed) {
+      groupsEl.innerHTML = "";
+
+      const map = new Map();
+      for (const s of servers) map.set(s.key, { server: s, commands: [] });
+      for (const c of commands) {
+        if (!map.has(c.server_key)) continue;
+        map.get(c.server_key).commands.push(c);
+      }
+
+      for (const [key, item] of map.entries()) {
+        const s = item.server;
+
+        const details = document.createElement("details");
+        details.className = "section";
+        details.open = true;
+
+        const summary = document.createElement("summary");
+
+        const labelHtml = authed
+          ? `<span class="server-label-editable" data-server-key="${escapeHtml(s.key)}" data-server-label="${escapeHtml(s.label)}">
+               <span class="server-label-text">${escapeHtml(s.label)}</span>
+               <span class="edit-badge">edit</span>
+             </span>
+             <span class="edit-badge" style="margin-left:8px;" data-edit-id="${escapeHtml(s.key)}">Edit ID</span>`
+          : `${escapeHtml(s.label)}`;
+
+        summary.innerHTML = `
+          <div class="section-title">
+            ${labelHtml}
+            ${authed ? `<small>Server: ${escapeHtml(s.key)}</small>` : ``}
+          </div>
+          <span class="chev" aria-hidden="true"></span>
+        `;
+
+        if (authed) {
+          summary.querySelectorAll(".server-label-editable").forEach(el => {
+            el.addEventListener("click", (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              const serverKey = el.getAttribute("data-server-key");
+              const currentLabel = el.getAttribute("data-server-label") || "";
+              renameServerLabel(serverKey, currentLabel);
+            });
+          });
+
+          const editIdBadge = summary.querySelector(`[data-edit-id="${CSS.escape(s.key)}"]`);
+          if (editIdBadge) {
+            editIdBadge.addEventListener("click", (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              renameServerKey(s.key);
+            });
+          }
+        }
+
+        const content = document.createElement("div");
+        content.className = "content";
+
+        if (authed) {
+          const adminCtl = document.createElement("div");
+          adminCtl.className = "admin-controls";
+          adminCtl.innerHTML = `
+            <div class="left">
+              <label class="toggle">
+                <input type="checkbox" ${Number(s.public_visible ?? 1) ? "checked" : ""} data-server-public="${escapeHtml(s.key)}">
+                <span>Visible to users</span>
+              </label>
+            </div>
+            <div class="right">
+              <span class="toggle" style="gap:10px;">
+                <span>Section order</span>
+                <input class="mini" type="number" value="${escapeHtml(s.sort_order ?? 10)}" style="width:90px;" data-server-sort="${escapeHtml(s.key)}">
+              </span>
+              <button class="mini" type="button" data-server-save="${escapeHtml(s.key)}">Save</button>
+            </div>
+          `;
+          content.appendChild(adminCtl);
+
+          const pubCb = adminCtl.querySelector(`[data-server-public="${CSS.escape(s.key)}"]`);
+          const sortIn = adminCtl.querySelector(`[data-server-sort="${CSS.escape(s.key)}"]`);
+          const saveBtn = adminCtl.querySelector(`[data-server-save="${CSS.escape(s.key)}"]`);
+
+          saveBtn.addEventListener("click", async () => {
+            saveBtn.disabled = true;
+            try {
+              await saveServerSettings(s.key, pubCb.checked, sortIn.value);
+              await loadAll();
+            } catch (e) {
+              setStatus(`❌ Failed: ${e.message}`, "err");
+            } finally {
+              saveBtn.disabled = false;
+            }
+          });
+        }
+
+        const buttonsWrap = document.createElement("div");
+        buttonsWrap.className = "buttons";
+
+        if (item.commands.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "muted";
+          empty.textContent = "No commands yet.";
+          buttonsWrap.appendChild(empty);
+        } else {
+          for (const cmd of item.commands) {
+            const row = document.createElement("div");
+            row.className = "cmd-row";
+
+            const b = document.createElement("button");
+            b.className = "btn cmd";
+            b.textContent = cmd.label;
+            b.addEventListener("click", () => sendToWebhook(cmd.server_key, cmd.command, cmd.confirm_text, b));
+            row.appendChild(b);
+
+            if (authed) {
+              const pubWrap = document.createElement("label");
+              pubWrap.className = "toggle";
+              pubWrap.style.minWidth = "120px";
+              pubWrap.innerHTML = `
+                <input type="checkbox" ${Number(cmd.public_visible ?? 1) ? "checked" : ""} />
+                <span>Public</span>
+              `;
+              const pubCb = pubWrap.querySelector("input");
+              pubCb.addEventListener("change", async () => {
+                pubCb.disabled = true;
+                try {
+                  await saveCommandSettings(cmd.id, pubCb.checked);
+                } catch (e) {
+                  setStatus(`❌ Failed: ${e.message}`, "err");
+                  pubCb.checked = !pubCb.checked;
+                } finally {
+                  pubCb.disabled = false;
+                }
+              });
+              row.appendChild(pubWrap);
+
+              const info = document.createElement("div");
+              info.className = "info-dot";
+              info.textContent = "?";
+              info.title =
+                `Command Info\n` +
+                `-----------------\n` +
+                `ID: ${cmd.id}\nCommand: ${cmd.command}\nSort Order: ${cmd.sort_order}`;
+              row.appendChild(info);
+
+              const del = document.createElement("button");
+              del.className = "btn btn-danger del";
+              del.textContent = "Delete";
+              del.addEventListener("click", async () => {
+                if (!confirm(`Delete command "${cmd.label}" for ${cmd.server_key}?`)) return;
+                del.disabled = true;
+                try {
+                  setStatus("Deleting...");
+                  await apiDelete("commands", `id=${encodeURIComponent(cmd.id)}`);
+                  await loadAll();
+                  setStatus("✅ Deleted.", "ok");
+                } catch (e) {
+                  setStatus(`❌ Delete failed: ${e.message}`, "err");
+                } finally {
+                  del.disabled = false;
+                }
+              });
+              row.appendChild(del);
+            }
+
+            buttonsWrap.appendChild(row);
+          }
+        }
+
+        const spacer = document.createElement("div");
+        spacer.className = "spacer-line";
+        buttonsWrap.appendChild(spacer);
+
+        const diagBottom = document.createElement("div");
+        diagBottom.className = "diag-bottom";
+
+        const diagRow1 = document.createElement("div");
+        diagRow1.className = "cmd-row";
+        const diagBtn = document.createElement("button");
+        diagBtn.className = "btn cmd";
+
+        if (diagRunningByServer.has(s.key)) setDiagButtonLoading(diagBtn, true, "Run Diagnostic");
+        else diagBtn.textContent = "Run Diagnostic";
+
+        diagBtn.addEventListener("click", () => startDiagnostic(s.key, s.label, diagBtn));
+        diagRow1.appendChild(diagBtn);
+        diagBottom.appendChild(diagRow1);
+
+        const diagRow2 = document.createElement("div");
+        diagRow2.className = "cmd-row";
+        const diagViewBtn = document.createElement("button");
+        diagViewBtn.className = "btn cmd";
+        diagViewBtn.textContent = "History";
+        diagViewBtn.addEventListener("click", () => {
+          openDiagModal(s.key, `Diagnostic (${s.label})`, "Select a history item below, or run a new diagnostic.", "gray");
+        });
+        diagRow2.appendChild(diagViewBtn);
+        diagBottom.appendChild(diagRow2);
+
+        buttonsWrap.appendChild(diagBottom);
+
+        content.appendChild(buttonsWrap);
+        details.appendChild(summary);
+        details.appendChild(content);
+        groupsEl.appendChild(details);
+      }
+    }
+
+    async function loadAll() {
+      isAdmin = await getAuthStatus();
+
+      if (isAdmin) {
+        creatorCard.style.display = "";
+        serverMgmtCard.style.display = "";
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "";
+        statusEl.style.display = "";
+        setStatus("Loading...");
+      } else {
+        creatorCard.style.display = "none";
+        serverMgmtCard.style.display = "none";
+        loginBtn.style.display = "";
+        logoutBtn.style.display = "none";
+        statusEl.style.display = "none";
+      }
+
+      await loadConfig();
+
+      const [srv, cmd] = await Promise.all([apiGet("servers"), apiGet("commands")]);
+
+      serverSelect.innerHTML = "";
+      if (isAdmin) {
+        for (const s of srv.servers) {
+          const opt = document.createElement("option");
+          opt.value = s.key;
+          opt.textContent = `${s.label} (${s.key})`;
+          serverSelect.appendChild(opt);
+        }
+      }
+
+      renderGroups(srv.servers, cmd.commands, isAdmin);
+      await loadSpeedtest();
+
+      if (isAdmin) setStatus("Ready.", "ok");
+    }
+
+    createBtn.addEventListener("click", async () => {
+      const payload = {
+        server_key: serverSelect.value,
+        label: labelInput.value.trim(),
+        command: commandInput.value.trim(),
+        confirm_text: confirmInput.value.trim(),
+        sort_order: parseInt(sortOrderInput.value || "0", 10) || 0,
+        enabled: true,
+        public_visible: true
+      };
+
+      createBtn.disabled = true;
+      try {
+        setStatus("Loading...");
+        await apiPost("commands", payload);
+        labelInput.value = "";
+        commandInput.value = "";
+        confirmInput.value = "";
+        await loadAll();
+        setStatus("✅ Command saved.", "ok");
+      } catch (e) {
+        setStatus(`❌ Save failed: ${e.message}`, "err");
+      } finally {
+        createBtn.disabled = false;
+      }
+    });
+
+    reloadBtn.addEventListener("click", () => loadAll().catch(e => setStatus(e.message, "err")));
+
+    logoutBtn.addEventListener("click", async () => {
+      logoutBtn.disabled = true;
+      try {
+        await logout();
+        await loadAll();
+      } catch (e) {
+        setStatus(`Logout failed: ${e.message}`, "err");
+      } finally {
+        logoutBtn.disabled = false;
+      }
+    });
+
+    loadAll().catch(e => {
+      isAdmin = true;
+      statusEl.style.display = "";
+      setStatus(e.message, "err");
+    });
+  </script>
+</body>
+
+</html>
