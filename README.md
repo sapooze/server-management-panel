@@ -1,5 +1,5 @@
 # server-management-panel
 A simple Server Management Panel, powered with n8n
 
-## How to use it
-### - Download the Repo
+## Setup
+To set the panel up follow this documentation:
